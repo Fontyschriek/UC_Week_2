@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Week2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/UC_tijdmeten.zip!/" />
+      <root url="jar://$PROJECT_DIR$/UC_w2_klasvoorbeeld.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

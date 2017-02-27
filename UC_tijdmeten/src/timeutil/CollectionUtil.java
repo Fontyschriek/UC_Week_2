@@ -1,6 +1,7 @@
 package timeutil;
 
 import javax.swing.text.html.HTMLDocument;
+import java.sql.Time;
 import java.util.*;
 
 /**
@@ -9,7 +10,10 @@ import java.util.*;
 public class CollectionUtil {
 
     final static int DEFAULT_STRING_LENGTH = 20;
-    List<Integer> tests = Arrays.asList(500,1000,5000,10000,25000,100000, 1000000, 10000000);
+    final static List<Integer> tests = Arrays.asList(500,1000,2000, 5000, 10000, 20000, 50000, 100000 /**, 200000, 500000, 1000000, 2000000, 5000000 , 10000000*/);
+    private static enum InsertPosition { Begin, Middle, End};
+
+
     /**
      * Add a number of random strings to a collection
      * @param nrOfString The number of strings to add
@@ -20,6 +24,52 @@ public class CollectionUtil {
         for (int i = 0; i < nrOfString; i ++) {
             aCollection.add(randomName(DEFAULT_STRING_LENGTH,random));
         }
+    }
+
+    /**
+     * test adding random strings to a collection (a name refactoring of the above method addRandomStringsToCollection) The names are now more aligned to searching and removing methods
+     * @param aCollection The collection to add to
+     * @param nrOfElements The number of strings to add
+     */
+    public static void testAdding( Collection aCollection,int nrOfElements) {
+        addRandomStringsToCollection(nrOfElements, aCollection);
+    }
+
+    /**
+     * Test the removal from the collection in a random sequence. the iterator contains the shuffled collection
+     * @param aCollection The collection to remove elemens from
+     * @param iterator The collection iterator in a shuffled order
+     */
+    public static void testRemoving(Collection aCollection, Iterator iterator)
+    {
+        while (iterator.hasNext()){
+            aCollection.remove((String)iterator.next());
+        }
+    }
+
+    /**
+     * searches the collection for elements. The iterator is a shuffled version of the collection
+     * @param aCollection The collection to be searched
+     * @param iterator The iterator of elements to search
+     */
+    public static void testSearching(Collection aCollection, Iterator iterator ){
+        int count = 0;
+        while (iterator.hasNext()){
+            if (aCollection.contains(iterator.next()))  count++;
+        }
+        // TODO warn when not all elements are found..
+
+    }
+
+    /**
+     * Create a shuffled list from the collection to iterate over for search and removal
+     * @param aCollection The collection to shuffle
+     * @return An iterator for the shuffled collection
+     */
+    public static Iterator<String> createShuffledIterator(Collection aCollection) {
+        List<String> list = new ArrayList(aCollection);
+        Collections.shuffle(list);
+        return list.iterator();
     }
 
     /**
@@ -36,94 +86,44 @@ public class CollectionUtil {
         return sb.toString();
     }
 
-    /**
-     * Run tests according the predefined list of samples
-     * @param aCollection The collection to test
-     * @param samples the number of samples to execute
-     */
-    public static void runTests(Collection aCollection, int samples){
-        // create a new Timestamp
-        TimeStamp ts = new TimeStamp();
-        ts.setBegin();
-        addRandomStringsToCollection(samples, aCollection);
-        ts.setEnd("Finished processing " + samples + " elements");
-        // print the results
-        System.out.print(ts.toString());
-        aCollection.clear(); // clear the collection
-    }
-
-    /**
-     * Run tests according the predefined list of samples and provide a time stamp to measure the duration
-     * @param aCollection The collection to test
-     * @param samples the number of samples to process
-     * @param ts The Timesstamp to measure durations
-     */
-    public static void createCollection(Collection aCollection, int samples, TimeStamp ts){
-        ts.setBegin();
-        addRandomStringsToCollection(samples, aCollection);
-        ts.setEnd("Finished processing " + samples + " elements");
-    }
-
-    public static void addToAndSearchCollection(List<String> aCollection, String basename, TimeStamp ts) {
+    private static void collectionTest(Collection aCollection, String name) {
         Iterator iterator = tests.iterator();
+        System.out.format(" %20s | %10s | %10s | %10s | %10s |\n", "Name", "Elements", "Adding", "Searching", "Removing");
         while (iterator.hasNext()) {
-            int samples = (int) iterator.next();
-            ts.setBegin("Adding " + samples + "names at the beginning, middle and end of the list");
-            for (int i = 0; i < samples; i += 3) {
-                aCollection.add(0, basename + i);
-                ts.setEnd();
-                ts.setEndBegin("Adding name in the middle of the list");
-                aCollection.add(aCollection.size() / 2, basename + i +1 );
-                ts.setEnd();
-                ts.setEndBegin("Adding name at the end of the list");
-                aCollection.add(aCollection.size(), basename + i +2);
-                ts.setEnd();
-                ts.setEndBegin("searching " + basename + i + " in the collection ");
-                aCollection.contains(basename + i);
-                ts.setEnd();
-                ts.setEndBegin("searching " + basename + i + "in the collection ");
-                aCollection.contains(basename + i + 1);
-                ts.setEnd();
-                ts.setEndBegin("searching " + basename + "_1 in the collection ");
-                aCollection.contains(basename + i + 2);
-                ts.setEnd();
-            }
-            for (int i = 0; i < samples; i++) {
-                aCollection.remove(basename + i);
-            }
+            long adding = 0;
+            long removing = 0;
+            long searching = 0;
+            // Start with adding elements to the collection
+            TimeStamp ts = new TimeStamp();
+            int elements = (int) iterator.next();
+            ts.setBegin();
+            testAdding(aCollection, elements);
+            ts.setEnd();
+            adding = ts.getDurations().get(0); // should only be one
+            Iterator shuffled = createShuffledIterator(aCollection);
+            ts.init();
+            ts.setBegin();
+            testSearching(aCollection, shuffled);
+            ts.setEnd();
+            searching = ts.getDurations().get(0); // should only be one
+            ts.init();
+            shuffled = createShuffledIterator(aCollection); //reset the shuffling iterator
+            ts.setBegin();
+            testRemoving(aCollection,shuffled);
+            ts.setEnd();
+            removing = ts.getDurations().get(0); // should only be one
+            System.out.format(" %20s | %10d | %10d | %10d | %10d |\n", name, elements, adding, searching, removing);
         }
     }
+
 
     public static void main(String[] args) {
-
-        Iterator iterator = tests.iterator();
-        while (iterator.hasNext()) {
-            int samples = (int)iterator.next();
-            System.out.println("Testing with " + samples + " elements");
-            System.out.println("Running tests with an ArrayList implementation");
-            List<String> list = new ArrayList();
-            runTests(list,samples);
-            System.out.println("Running tests with an ArrayList implementation with preset size");
-            list = new ArrayList(samples);
-            runTests(list,samples);
-            System.out.println("Running tests with a LinkedList implementation");
-            list = new LinkedList<>();
-            runTests(list,samples);
-            System.out.println("Running tests with a LinkedList implementation");
-        }
-
-        iterator = tests.iterator();
-        while (iterator.hasNext()) {
-            int samples = (int) iterator.next();
-            TimeStamp ts = new TimeStamp();
-            List<String> aCollection = new ArrayList();
-            createCollection(aCollection, samples, ts);
-            // reset ts not interested in creation timings
-            ts.init();
-            addToAndSearchCollection(aCollection,"Test", ts);
-            // To someting the the ts.getPeriodTimes().
-
-        }
+        collectionTest(new ArrayList(), "ArrayList");
+        collectionTest(new LinkedList(), "LinkedList");
+        collectionTest(new TreeSet(), "TreeSet");
+        collectionTest(new HashSet(), "HashSet");
+        collectionTest(new Vector(), "Vector");
     }
 
 }
+

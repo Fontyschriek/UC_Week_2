@@ -81,6 +81,16 @@ public class TimeStamp {
     }
 
     /**
+     * Create a list with durations to easily do some graphing
+     * @return the list with durations
+     */
+    public List<Long> getDurations() {
+        List<Long> values = new ArrayList();
+        getPeriodTimes().forEach(b-> values.add(b.getRight() - b.getLeft()));
+        return values;
+    }
+
+    /**
      * zet eindtijdstip. gebruik interne teller voor identificatie van het
      * tijdstip
      */

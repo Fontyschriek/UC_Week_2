@@ -110,45 +110,65 @@ Kies een List implementatie (naar eigen keuze), en voeg onderstaande stappen 100
 
 ``` java
 
-//**
-      * Run tests according the predefined list of samples
-      * @param aCollection The collection to test
-      */
-     public static void runTests(Collection aCollection, int samples){
-         // create a new Timestamp
-         TimeStamp ts = new TimeStamp();
-         ts.setBegin();
-         addRandomStringsToCollection(samples, aCollection);
-         ts.setEnd("Finished processing " + samples + " elements");
-         // print the results
-         System.out.print(ts.toString());
-         aCollection.clear(); // clear the collection
-     }
- 
- 
-     public static void main(String[] args) {
-         List<Integer> tests = Arrays.asList(500,1000,5000,10000,25000,100000, 1000000, 10000000);
-         Iterator iterator = tests.iterator();
-         while (iterator.hasNext()) {
-             int samples = (int)iterator.next();
-             System.out.println("Testing with " + samples + " elements");
-             System.out.println("Running tests with an ArrayList implementation");
-             List<String> list = new ArrayList();
-             runTests(list,samples);
-             System.out.println("Running tests with an ArrayList implementation with preset size");
-             list = new ArrayList(samples);
-             runTests(list,samples);
-             System.out.println("Running tests with a LinkedList implementation");
-             list = new LinkedList<>();
-             runTests(list,samples);
-         }
-     }
+final static int DEFAULT_STRING_LENGTH = 20;
+final static List<Integer> tests = Arrays.asList(500,1000,2000, 5000, 10000, 20000, 50000, 100000 /**, 200000, 500000, 1000000, 2000000, 5000000 , 10000000*/);
 
+private static void collectionTest(Collection aCollection, String name) {
+        Iterator iterator = tests.iterator();
+        System.out.format(" %20s | %10s | %10s | %10s | %10s |\n", "Name", "Elements", "Adding", "Searching", "Removing");
+        while (iterator.hasNext()) {
+            long adding = 0;
+            long removing = 0;
+            long searching = 0;
+            // Start with adding elements to the collection
+            TimeStamp ts = new TimeStamp();
+            int elements = (int) iterator.next();
+            ts.setBegin();
+            testAdding(aCollection, elements);
+            ts.setEnd();
+            adding = ts.getDurations().get(0); // should only be one
+            Iterator shuffled = createShuffledIterator(aCollection);
+            ts.init();
+            ts.setBegin();
+            testSearching(aCollection, shuffled);
+            ts.setEnd();
+            searching = ts.getDurations().get(0); // should only be one
+            ts.init();
+            shuffled = createShuffledIterator(aCollection); //reset the shuffling iterator
+            ts.setBegin();
+            testRemoving(aCollection,shuffled);
+            ts.setEnd();
+            removing = ts.getDurations().get(0); // should only be one
+            System.out.format(" %20s | %10d | %10d | %10d | %10d |\n", name, elements, adding, searching, removing);
+        }
+    }
+ 
+public static void main(String[] args) {
+        collectionTest(new ArrayList(), "ArrayList");
+        collectionTest(new LinkedList(), "LinkedList");
+    }
 
 ```
 
 Het uitvoer resultaat is :
 
+            ArrayList |        500 |         11 |          7 |         25 
+            ArrayList |       1000 |         10 |          2 |          5 
+            ArrayList |       2000 |          1 |          7 |          8 
+            ArrayList |       5000 |          2 |        227 |        168 
+            ArrayList |      10000 |          2 |        734 |        310 
+            ArrayList |      20000 |          5 |       3148 |        890 
+            ArrayList |      50000 |         16 |      13135 |       7782 
+            ArrayList |     100000 |         56 |      42582 |      29018 
+                 Name |   Elements |     Adding |  Searching |   Removing |
+           LinkedList |        500 |          1 |          6 |          2 
+           LinkedList |       1000 |          4 |          2 |         17 
+           LinkedList |       2000 |          1 |         21 |          6 
+           LinkedList |       5000 |          1 |         86 |         54 
+           LinkedList |      10000 |          2 |        367 |        245 
+           LinkedList |      20000 |          3 |       4151 |       2131 
+           LinkedList |      50000 |         25 |      13783 |       8187 
+           LinkedList |     100000 |         32 |     133753 |      95160 
 
 Nu heb je 100x gemeten hoelang het duurt om een list te vullen.
 
@@ -160,42 +180,119 @@ Indien je JVM uit zijn heap geheugen loopt: voeg run parameters toe aan je proje
 ## Opdracht 1.4
 
 Pak een andere List implementatie en doe hetzelfde als bij opdracht 1.3,  
-Naast de standaard ArrayList implementatie heb ik ook de implementatie met vooraf gedefinieerde grote ingevoerd. Hiermee hoop ik het verschil te laten zien in de kosten voor de implementatie in het vergroten van de standaard array.
+Naast de standaard ArrayList en LinkedList implementatie heb ik ook de volgende collections toegevoegd:
+- TreeSet
+- Vector
+- HashSet
+- LinkedHashSet
+
 
 Verklaar eventuele verschillen of het ontbreken ervan. (iets met ordes of zo)
 
-### Testing with 500 elements
-- Running tests with an ArrayList implementation; From '0' till 'Finished processing 500 elements' is 9 mSec.
-- Running tests with an ArrayList implementation with preset size; From '0' till 'Finished processing 500 elements' is 11 mSec.
-- Running tests with a LinkedList implementation;  From '0' till 'Finished processing 500 elements' is 1 mSec.
-### Testing with 1000 elements
-- Running tests with an ArrayList implementation; From '0' till 'Finished processing 1000 elements' is 5 mSec.
-- Running tests with an ArrayList implementation with preset size; From '0' till 'Finished processing 1000 elements' is 1 mSec.
-- Running tests with a LinkedList implementation; From '0' till 'Finished processing 1000 elements' is 1 mSec.
-### Testing with 5000 elements
-- Running tests with an ArrayList implementation; From '0' till 'Finished processing 5000 elements' is 8 mSec.
-- Running tests with an ArrayList implementation with preset size; From '0' till 'Finished processing 5000 elements' is 1 mSec.
-- Running tests with a LinkedList implementation; From '0' till 'Finished processing 5000 elements' is 8 mSec.
-### Testing with 10000 elements
-- Running tests with an ArrayList implementation; From '0' till 'Finished processing 10000 elements' is 4 mSec.
-- Running tests with an ArrayList implementation with preset size; From '0' till 'Finished processing 10000 elements' is 4 mSec.
-- Running tests with a LinkedList implementation;From '0' till 'Finished processing 10000 elements' is 8 mSec.
-### Testing with 25000 elements
-- Running tests with an ArrayList implementation; From '0' till 'Finished processing 25000 elements' is 12 mSec.
-- Running tests with an ArrayList implementation with preset size; From '0' till 'Finished processing 25000 elements' is 6 mSec.
-- Running tests with a LinkedList implementation; From '0' till 'Finished processing 25000 elements' is 21 mSec.
-### Testing with 100000 elements
-- Running tests with an ArrayList implementation; From '0' till 'Finished processing 100000 elements' is 150 mSec.
-- Running tests with an ArrayList implementation with preset size;From '0' till 'Finished processing 100000 elements' is 15 mSec.
-- Running tests with a LinkedList implementation; From '0' till 'Finished processing 100000 elements' is 96 mSec.
-### Testing with 1000000 elements
-- Running tests with an ArrayList implementation; From '0' till 'Finished processing 1000000 elements' is 588 mSec.
-- Running tests with an ArrayList implementation with preset size; From '0' till 'Finished processing 1000000 elements' is 573 mSec.
-- Running tests with a LinkedList implementation; From '0' till 'Finished processing 1000000 elements' is 642 mSec.
-### Testing with 10000000 elements
-- Running tests with an ArrayList implementation; From '0' till 'Finished processing 10000000 elements' is 8954 mSec.
-- Running tests with an ArrayList implementation with preset size; From '0' till 'Finished processing 10000000 elements' is 6460 mSec.
-- Running tests with a LinkedList implementation; From '0' till 'Finished processing 10000000 elements' is 5906 mSec.
+``` java
+public static void main(String[] args) {
+        collectionTest(new ArrayList(), "ArrayList");
+        collectionTest(new LinkedList(), "LinkedList");
+        collectionTest(new TreeSet(), "TreeSet");
+        collectionTest(new HashSet(), "HashSet");
+        collectionTest(new Vector(), "Vector");        
+    }
+    
+```
+                 Name |   Elements |     Adding |  Searching |   Removing |
+            ArrayList |        500 |         11 |         35 |          2 |
+            ArrayList |       1000 |         26 |          2 |         13 |
+            ArrayList |       2000 |          0 |         19 |         11 |
+            ArrayList |       5000 |          2 |        293 |        105 |
+            ArrayList |      10000 |          4 |        828 |        440 |
+            ArrayList |      20000 |          5 |       4284 |       1094 |
+            ArrayList |      50000 |         17 |      17082 |       8989 |
+            ArrayList |     100000 |         56 |      46275 |      32231 |
+                 Name |   Elements |     Adding |  Searching |   Removing |
+           LinkedList |        500 |          0 |         14 |          1 |
+           LinkedList |       1000 |          4 |         13 |         19 |
+           LinkedList |       2000 |          0 |         31 |         21 |
+           LinkedList |       5000 |          7 |        228 |         92 |
+           LinkedList |      10000 |          7 |        538 |        303 |
+           LinkedList |      20000 |          6 |       2038 |       1265 |
+           LinkedList |      50000 |         12 |      29251 |      17223 |
+           LinkedList |     100000 |         22 |     140310 |      83587 |
+                 Name |   Elements |     Adding |  Searching |   Removing |
+              TreeSet |        500 |          5 |          2 |          7 |
+              TreeSet |       1000 |          0 |          0 |          1 |
+              TreeSet |       2000 |         15 |          0 |          1 |
+              TreeSet |       5000 |          4 |          5 |         31 |
+              TreeSet |      10000 |          4 |          2 |          3 |
+              TreeSet |      20000 |          9 |         12 |         11 |
+              TreeSet |      50000 |         33 |         21 |         67 |
+              TreeSet |     100000 |        133 |         62 |        108 |
+                 Name |   Elements |     Adding |  Searching |   Removing |
+              HashSet |        500 |          2 |          0 |          1 |
+              HashSet |       1000 |          1 |          0 |          1 |
+              HashSet |       2000 |          0 |          0 |          0 |
+              HashSet |       5000 |         19 |         13 |         17 |
+              HashSet |      10000 |          2 |          0 |          1 |
+              HashSet |      20000 |          7 |          0 |          0 |
+              HashSet |      50000 |         46 |          3 |         12 |
+              HashSet |     100000 |         71 |          7 |         19 |
+                 Name |   Elements |     Adding |  Searching |   Removing |
+               Vector |        500 |          0 |         15 |          1 |
+               Vector |       1000 |          1 |          1 |          1 |
+               Vector |       2000 |          1 |         10 |          4 |
+               Vector |       5000 |          4 |         73 |         40 |
+               Vector |      10000 |          1 |        299 |        281 |
+               Vector |      20000 |          3 |       1278 |        764 |
+               Vector |      50000 |         12 |       5983 |       3943 |
+               Vector |     100000 |         24 |      69271 |      40591 |
+ 
+Zoals uit de bovenstaande resultaten blijkt scoren de TreeSet en HashSet erg goed in het zoeken en verwijderen van elementen.
+Dit correspondeert met de metingen die in het boek Java Generics and Collections heeft, deze informatie (pagina: 188, 211, 222, 240).
+geeft aan dat de LinkedList en ArrayList O(n) zijn terwijl de TreeSet en HashSet O(log(n)) zijn
+List implementaties:
+
+|                       | get  | add  | contains | next | remove(0) | iterator.remove |
+| --------------------- |:----:|:----:|:--------:|:----:|:---------:|:---------------:|
+| ArrayList             | O(1) | O(1) | O(n)     | O(1) | O(n)      | O(n)            |
+| LinkedList            | O(n) | O(1) | O(n)     | O(1) | O(1)      | O(1)            |
+| CopyOnWrite-ArrayList | O(1) | O(n) | O(n)     | O(1) | O(n)      | O(n)            |
+
+
+Set implementaties:
+
+|                      | add  |  contains | next   |  notes                     |
+| -------------------- |:----:|:---------:|:------:| -------------------------- |
+| HashSet              | O(1) |    O(1)   |  O(h/n)|  h is de tabel capaciteit  |
+| LinkedHashSet        | O(1) |    O(1)   |  O(1)  |                            |
+| CopyOnWriteArraySet  | O(n) |    O(n)   |  O(1)  |                            |
+| EnumSet              | O(1) |    O(1)   |  O(1)  |                            |
+| TreeSet              | O(log n)  | O(log n) | O(log n)  |                     | 
+| ConcurrentSkipListSet  | O(log n) | O(log n) | O(1) |                         |
+
+Map implementaties:
+
+|                     | get     | containsKey  | next   |  Notes                |
+| ------------------- |:-------:|:------------:|:------:| --------------------- |
+| HashMap             |  O(1)   |  O(1)        | O(h/n) |  h is de tabel capaciteit  |
+| LinkedHashMap       |  O(1)   |  O(1)        | O(1)   |                            |
+| IdentityHashMap     |  O(1)   |  O(1)        | O(h/n) |  h is de tabel capaciteit  |
+| EnumMap             | O(1)    | O(1)         | O(1) | |
+| TreeMap             |  O(log n) | O(log n)   |  O(log n) ||
+| ConcurrentHashMap   |   O(1)  |   O(1)       |  O(h/n) | h is de tabel capaciteit  |
+| ConcurrentSkipListMap | O(log n) | O(log n)  |  O(1) ||
+
+Queue implementations:
+
+|                     | offer    | peek | poll    | size |
+| ------------------- |:--------:|:----:|:-------:| ---- |
+| PriorityQueue       |  O(log n) | O(1) | O(log n) | O(1) |
+| ConcurrentLinkedQueue | O(1)    | O(1) | O(1)     | O(n) | 
+| ArrayBlockingQueue    | O(1)    | O(1) | O(1)     | O(1) | 
+| LinkedBlockingQueue   | O(1)    | O(1) | O(1)     | O(1) |
+| PriorityBlockingQueue | O(log n) | O(1) | O(log n) | O(1) |
+| DelayQueue            | O(log n) | O(1) | O(log n) | O(1) |
+| LinkedList            | O(1)     | O(1) | O(1)     | O(1) |
+| ArrayDeque            | O(1)     | O(1) | O(1)     | O(1) |
+| LinkedBlockingDeque   | O(1)     |O(1)  | O(1)     | O(1) |
 
 ## Opdracht 1.5
 Kies een List implementatie (naar eigen keuze), en voeg onderstaande stappen 100x uit, zodat er statistisch relevante resultaten ontstaan:
@@ -231,16 +328,90 @@ Doe hetzelfde met het toevoegen van 2000 strings, 5000 strings, 10.000 strings, 
 
 Zet de verschillende metingen van contains() uit in een grafiek
 Verklaar eventuele verschillen of het ontbreken ervan. (iets met ordes of zo)
+``` java 
 
+/**
+     * Test the removal from the collection in a random sequence. the iterator contains the shuffled collection
+     * @param aCollection The collection to remove elemens from
+     * @param iterator The collection iterator in a shuffled order
+     */
+    public static void testRemoving(Collection aCollection, Iterator iterator)
+    {
+        while (iterator.hasNext()){
+            aCollection.remove((String)iterator.next());
+        }
+    }
+
+    /**
+     * searches the collection for elements. The iterator is a shuffled version of the collection
+     * @param aCollection The collection to be searched
+     * @param iterator The iterator of elements to search
+     */
+    public static void testSearching(Collection aCollection, Iterator iterator ){
+        int count = 0;
+        while (iterator.hasNext()){
+            if (aCollection.contains(iterator.next()))  count++;
+        }
+        // TODO warn when not all elements are found..
+
+    }
+
+    /**
+     * Create a shuffled list from the collection to iterate over for search and removal
+     * @param aCollection The collection to shuffle
+     * @return An iterator for the shuffled collection
+     */
+    public static Iterator<String> createShuffledIterator(Collection aCollection) {
+        List<String> list = new ArrayList(aCollection);
+        Collections.shuffle(list);
+        return list.iterator();
+    }
+
+
+
+
+
+private static void collectionTest(Collection aCollection, String name) {
+        Iterator iterator = tests.iterator();
+        System.out.format(" %20s | %10s | %10s | %10s | %10s |\n", "Name", "Elements", "Adding", "Searching", "Removing");
+        while (iterator.hasNext()) {
+            long adding = 0;
+            long removing = 0;
+            long searching = 0;
+            // Start with adding elements to the collection
+            TimeStamp ts = new TimeStamp();
+            int elements = (int) iterator.next();
+            ts.setBegin();
+            testAdding(aCollection, elements);
+            ts.setEnd();
+            adding = ts.getDurations().get(0); // should only be one
+            Iterator shuffled = createShuffledIterator(aCollection);
+            ts.init();
+            ts.setBegin();
+            testSearching(aCollection, shuffled);
+            ts.setEnd();
+            searching = ts.getDurations().get(0); // should only be one
+            ts.init();
+            shuffled = createShuffledIterator(aCollection); //reset the shuffling iterator
+            ts.setBegin();
+            testRemoving(aCollection,shuffled);
+            ts.setEnd();
+            removing = ts.getDurations().get(0); // should only be one
+            System.out.format(" %20s | %10d | %10d | %10d | %10d |\n", name, elements, adding, searching, removing);
+        }
+    }
+
+```
 
 ## Opdracht 1.6
 Doe hetzelfde als 1.5, maar meet nu het verwijderen van de bekende strings.
 
+Uiteindelijk opgenomen in vraag 1.5
 
 
 ## Opdracht 1.7
 Doe hetzelfde als 1.5 en 1.6, maar nu met twee verschillende Set implementaties. Hou weer alle resultaten bij en zet ze uit in een grafiek. Verklaar verschillen tussen gebruik van de List en de Set implementaties.
-
+Voor deze opdracht heb ik de TreeSet en de HashSet gekozen. 
 
 ## Opdracht 1.8 (optioneel)
 Meet ook aan andere methoden die aangeboden worden door List en/of Set. Zoek hiertoe eerst methoden waarvan je denkt dat ze zeker verschillen zullen laten zien. Beargumenteer vooraf waarom je dit vindt, en voer dan pas de metingen uit.

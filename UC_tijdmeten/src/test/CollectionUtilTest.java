@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static timeutil.CollectionUtil.addRandomStringsToCollection;
+import static timeutil.CollectionUtil.testAdding;
 
 /**
  * Created by Charles Korthout.
@@ -28,7 +28,7 @@ class CollectionUtilTest {
     @Test
     void testAddRandomStringsToCollectionWithZeroEntries() {
         int expected = 0;
-        addRandomStringsToCollection(0,lijst);
+        testAdding(lijst,0);
         int actual = lijst.size();
         assertEquals(expected, actual);
     }
@@ -36,7 +36,7 @@ class CollectionUtilTest {
     @Test
     void testAddRandomStringsToCollectionWithSingleEntry() {
         int expected = 1;
-        addRandomStringsToCollection(1,lijst);
+        testAdding(lijst,1);
         int actual = lijst.size();
         System.out.println("Eerste element : " + lijst.get(0));
         assertEquals(expected, actual);
